@@ -2,11 +2,11 @@ GET http://localhost:3000/users
 
 ###
 
-GET http://localhost:3000/users?limit=1&offset=4
+GET http://localhost:3000/users?limit=1
 
 ###
 
-GET http://localhost:3000/users/474c066c-4abe-41af-9bc8-c359e25de46a
+GET http://localhost:3000/users/b18940c0-bee
 
 ###
 
@@ -14,7 +14,7 @@ POST http://localhost:3000/users
 Content-Type: application/json
 
 {
-  "email": "zzng@exple.com", 
+  "email": "zzssdng@ss", 
   "firstName": "손",
   "lastName": "감동",
   "address": "보우하트"
@@ -22,8 +22,7 @@ Content-Type: application/json
 
 ###
 
-PATCH http://localhost:3000/users/96aa10e6-b34c-4202-a913-7a4e17f537b3
-Content-Type: application/json
+PATCH http://localhost:3000/users/aeb7cf4c-7af2
 
 {
   "address": "z "
@@ -31,4 +30,4 @@ Content-Type: application/json
 
 ###
 
-DELETE http://localhost:3000/users/b8f11e76-0a9e-4b3f-bccf-8d9b4fbf331e
+DELETE http://localhost:3000/users/b8f11e76-0a9e-4b3f-bccf-8d9b4
