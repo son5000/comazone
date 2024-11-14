@@ -6,7 +6,7 @@ GET http://localhost:3000/users?limit=1
 
 ###
 
-GET http://localhost:3000/users/b18940c0-bee
+GET http://localhost:3000/users/73cb9639-d8b7-4f11-9a62-53f4187f3f11
 
 ###
 
@@ -31,3 +31,8 @@ PATCH http://localhost:3000/users/aeb7cf4c-7af2
 ###
 
 DELETE http://localhost:3000/users/b8f11e76-0a9e-4b3f-bccf-8d9b4
+
+
+###
+
+GET http://localhost:3000/users/73cb9639-d8b7-4f11-9a62-53f4187f3f11/saved-products
