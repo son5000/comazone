@@ -1,8 +1,6 @@
 # ✔ comazone (express / prisma <>  postgreSQL )
 
-**2024-11-01  !**
-
-[주요 prisma command’s](%E1%84%8C%E1%85%AE%E1%84%8B%E1%85%AD%20prisma%20command%E2%80%99s%20139b853ac11a80519941d1dc3960e6f3.md)
+**2024-11-01 start  !**
 
 ## 주요 사용 라이브러리 및 익스텐션
 
@@ -14,8 +12,6 @@
 - `superstruct`: 유효성 검사를 할 때 사용하는 라이브러리
 - `is-email`: 값이 이메일 형식인지 확인할 때 사용하는 라이브러리
 - `is-uuid`: 값이 UUID 형식인지 확인할 때 사용하는 라이브러리
-
-[dotenv](dotenv%20139b853ac11a80e0baebfc5100d0fee4.md)
 
 ## 코마존 서비에스에 필요한 테이블을 prisma 로 정의
 
