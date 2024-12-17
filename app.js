@@ -1,232 +1,54 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
 import express from 'express';
-import { PrismaClient, Prisma } from '@prisma/client';
-import { assert } from 'superstruct';
-import {
-  CreateUser,
-  PatchUser,
-  CreateProduct,
-  PatchProduct,
-  CreateOrder,
-  PatchOrder,
-} from './structs.js';
+import session from 'express-session';
+import cors from 'cors'
+import userRouter from './src/routes/userRoute.js'
+import postRouter from './src/routes/postRoute.js'
+import adminRouter from './src/routes/adminRoute.js'
+import dotenv from 'dotenv'
 
-const prisma = new PrismaClient();
-
+dotenv.config();
 const app = express();
-app.use(express.json());
+const PORT = process.env.PORT;
+const FRONTURL = process.env.FRONTEND_URL;
 
-function asyncHandler(handler) {
-  return async function (req, res) {
-    try {
-      await handler(req, res);
-    } catch (e) {
-      if (
-        e.name === 'StructError' ||
-        e instanceof Prisma.PrismaClientValidationError
-      ) {
-        res.status(400).send({ message: e.message });
-      } else if (
-        e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2025'
-      ) {
-        res.sendStatus(404);
-      } else {
-        res.status(500).send({ message: e.message });
-      }
-    }
-  };
+// CORS 설정
+app.use(cors(
+  {
+  origin: `${FRONTURL}`, // 프론트엔드 주소 (React 개발 서버)
+  methods: ['GET', 'POST','DELETE','PATCH'], // 허용할 HTTP 메서드
+  credentials: true, // 쿠키 전달 허용
 }
+))
 
-/*********** users ***********/
+// 미들웨어 설정
+app.use(express.json());  // 요청 본문을 JSON 형태로 파싱
 
-app.get('/users', asyncHandler(async (req, res) => {
-  const { offset = 0, limit = 10, order = 'newest' } = req.query;
-  let orderBy;
-  switch (order) {
-    case 'oldest':
-      orderBy = { createdAt: 'asc' };
-      break;
-    case 'newest':
-    default:
-      orderBy = { createdAt: 'desc' };
-  }
-  const users = await prisma.user.findMany({
-    orderBy,
-    skip: parseInt(offset),
-    take: parseInt(limit),
-    include: {
-      userPreference : {
-        select: {
-          receiveEmail: true,
-        },
-      },
-    },
-  });
-  res.send(users);
+app.use(session({
+  secret: 'secret-key', // 세션 암호화에 사용되는 비밀 키
+  resave: false,
+  saveUninitialized: false,
+  cookie: {  // 개발 환경에서는 false로 설정
+    secure: false, // 개발 환경에서는 false
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,  // 쿠키의 만료 시간 (24시간)
+  }  
 }));
 
-app.get('/users/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id },
-    include: {
-      userPreference : {
-        select : {
-          receiveEmail : true,
-        }
-      },
-    }
-  });
-  res.send(user);
-}));
+// 로킹 미들웨어 모든 요청 로깅
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.url}`); // 요청 메서드와 URL 로깅
+  next(); 
+});
 
-app.get('/users/:id/saved-products', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { savedProducts } = await prisma.user.findUniqueOrThrow({
-    where: { id },
-    include: {
-      savedProducts : true 
-      },
-  });
-  res.send(savedProducts);
-}));
+app.get('/healthz', (req, res) => {
+  res.status(200).send('OK');
+});
 
-app.post('/users', asyncHandler(async (req, res) => {
-  assert(req.body, CreateUser);
-  const user = await prisma.user.create({
-    data: req.body,
-  });
-  res.status(201).send(user);
-}));
+app.use('/user',userRouter);
+app.use('/post',postRouter);
+app.use('/admin',adminRouter);
 
-app.patch('/users/:id', asyncHandler(async (req, res) => {
-  assert(req.body, PatchUser);
-  const { id } = req.params;
-  const user = await prisma.user.update({
-    where: { id },
-    data: req.body,
-  });
-  res.send(user);
-}));
-
-app.delete('/users/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  await prisma.user.delete({
-    where: { id },
-  });
-  res.sendStatus(204);
-}));
-
-/*********** products ***********/
-
-app.get('/products', asyncHandler(async (req, res) => {
-  const { offset = 0, limit = 10, order = 'newest', category } = req.query;
-  let orderBy;
-  switch (order) {
-    case 'priceLowest':
-      orderBy = { price: 'asc' };
-      break;
-    case 'priceHighest':
-      orderBy = { price: 'desc' };
-      break;
-    case 'oldest':
-      orderBy = { createdAt: 'asc' };
-      break;
-    case 'newest':
-    default:
-      orderBy = { createdAt: 'desc' };
-  }
-  const where = category ? { category } : {};
-  const products = await prisma.product.findMany({
-    where,
-    orderBy,
-    skip: parseInt(offset),
-    take: parseInt(limit),
-  });
-  res.send(products);
-}));
-
-app.get('/products/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const product = await prisma.product.findUnique({
-    where: { id },
-  });
-  res.send(product);
-}));
-
-app.post('/products', asyncHandler(async (req, res) => {
-  assert(req.body, CreateProduct);
-  const product = await prisma.product.create({
-    data: req.body,
-  });
-  res.status(201).send(product);
-}));
-
-app.patch('/products/:id', asyncHandler(async (req, res) => {
-  assert(req.body, PatchProduct);
-  const { id } = req.params;
-  const product = await prisma.product.update({
-    where: { id },
-    data: req.body,
-  });
-  res.send(product);
-}));
-
-app.delete('/products/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  await prisma.product.delete({
-    where: { id },
-  });
-  res.sendStatus(204);
-}));
-
-/*********** orders ***********/
-
-app.get('/orders', asyncHandler(async (req, res) => {
-  const orders = await prisma.order.findMany();
-  res.send(orders);
-}));
-
-app.get('/orders/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const order = await prisma.order.findUniqueOrThrow({
-    where: { id },
-    include : {
-      orderItems : true,
-    }
-  });
-  let total = 0;
-  order.orderItems.forEach((el) => {
-    total += el.quantity * el.unitPrice
-  })
-  order.total = total;
-  res.send(order);
-}));
-
-app.post('/orders', asyncHandler(async (req, res) => {
-  assert(req.body, CreateOrder);
-  const order = await prisma.order.create({
-    data: req.body,
-  });
-  res.status(201).send(order);
-}));
-
-app.patch('/orders/:id', asyncHandler(async (req, res) => {
-  assert(req.body, PatchOrder);
-  const { id } = req.params;
-  const order = await prisma.order.update({
-    where: { id },
-    data: req.body,
-  });
-  res.send(order);
-}));
-
-app.delete('/orders/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  await prisma.order.delete({ where: { id } });
-  res.sendStatus(204);
-}));
-
-app.listen(process.env.PORT || 3000, () => console.log('Server Started'));
+// 서버 실행
+app.listen(PORT,() => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+});

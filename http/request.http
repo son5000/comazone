@@ -1,0 +1,29 @@
+
+//모든 유저 불러오기
+GET http://localhost:5000/user/usersAll
+
+###
+GET http://localhost:5000/post/All
+
+###
+
+
+// 특정아이디 유저 찾기
+
+GET http://localhost:5000/userList/dog123
+
+###
+
+GET http://localhost:5000/session
+
+
+###
+
+GET http://localhost:5000/post/write
+
+Content-Type: application/json
+{
+    
+}
+
+

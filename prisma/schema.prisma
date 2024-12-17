@@ -1,6 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,74 +14,37 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  email          String          @unique
-  firstName      String
-  lastName       String
-  address        String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  orders         Order[]
-  userPreference UserPreference?
-  savedProducts  Product[]
+  userId          String   @id @unique
+  userPw          String
+  userPhoneNumber String   @unique
+  address         String
+  favoritPlayer   String
+  selectedJob     String?
+  singleOrMarried String?
+  advertisement   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
-model Product {
-  id          String      @id @default(uuid())
-  name        String
-  description String?
-  category    Category
-  price       Float
-  stock       Int
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  savedUser   User[]
-  OrderItem   OrderItem[]
+model Admin {
+  adminId String @id @unique
+  adminPw String
 }
 
-model UserPreference {
-  id           String   @id @default(uuid())
-  receiveEmail Boolean
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String   @unique
-}
-
-model Order {
-  id         String      @id @default(uuid())
-  status     OrderStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  // foreign key        userId 필드가 user 모델의 id 필드를 참조.
-  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId     String?
-  orderItems OrderItem[]
-}
-
-model OrderItem {
-  id        String   @id @default(uuid())
-  unitPrice Float
-  quantity  Int
+model Post {
+  id        Int      @id @default(autoincrement()) // 자동 증가하는 고유 ID
+  type      PostType
+  title     String
+  views     Int?
+  author    String?
+  content   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  orderId   String?
-  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-  productId String?
 }
 
-enum Category {
-  FASHION
-  BEAUTY
-  SPORTS
-  ELECTRONICS
-  HOME_INTERIOR
-  HOUSEHOLD_SUPPLIES
-  KITCHENWARE
-}
-
-enum OrderStatus {
-  PENDING
-  COMPLETE
+enum PostType {
+  notice
+  news
+  cheeringGrounds
+  report
 }
